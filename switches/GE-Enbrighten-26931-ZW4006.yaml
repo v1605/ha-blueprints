@@ -1,0 +1,113 @@
+blueprint:
+  name: GE/Enbrighten 26931 / ZW4006 (Z-Wave JS) v0.02
+  description: Create automations for the GE/Jasco Switches using the Z-Wave JS integration.
+  domain: automation
+  input:
+    ge_jasco:
+      name: Switch Device
+      description: List of available GE/Jasco 46201 / ZW4008 switches
+      selector:
+        device:
+          integration: zwave_js
+          manufacturer: GE/Enbrighten
+          model: 26931 / ZW4006
+    tap_1x_up:
+      name: Tap 1x Up
+      description: Action to run when Up button is pressed 1 time.
+      default: []
+      selector:
+        action:
+    tap_1x_dn:
+      name: Tap 1x Down
+      description: Action to run when Down button is pressed 1 time.
+      default: []
+      selector:
+        action:
+    tap_2x_up:
+      name: Tap 2x Up
+      description: Action to run when Up button is pressed 2 times.
+      default: []
+      selector:
+        action:
+    tap_2x_dn:
+      name: Tap 2x Down
+      description: Action to run when Down button is pressed 2 times.
+      default: []
+      selector:
+        action:
+    tap_3x_up:
+      name: Tap 3x Up
+      description: Action to run when Up button is pressed 3 times.
+      default: []
+      selector:
+        action:
+    tap_3x_dn:
+      name: Tap 3x Down
+      description: Action to run when Down button is pressed 3 times.
+      default: []
+      selector:
+        action:
+    up_btn_hld:
+      name: Up Button Held
+      description: Action to run when Up button is Held.
+      default: []
+      selector:
+        action:
+    up_btn_rel:
+      name: Up Button Released
+      description: Action to run when Up button is Released.
+      default: []
+      selector:
+        action:
+    dn_btn_hld:
+      name: Down Button Held
+      description: Action to run when Down button is Held.
+      default: []
+      selector:
+        action:
+    dn_btn_rel:
+      name: Down Button Released
+      description: Action to run when Down button is Released.
+      default: []
+      selector:
+        action:
+#  source_url: https://gist.github.com/shannonfritz/b5151cd53285a1694bf68f56053114b7
+mode: single
+max_exceeded: silent
+variables:
+  device_id: !input 'ge_jasco'
+trigger:
+- platform: event
+  event_type: zwave_js_value_notification
+condition: '{{ trigger.event.data.device_id == device_id }}'
+action:
+- variables:
+    property_key_name: '{{ trigger.event.data.property_key_name }}'
+    label: '{{ trigger.event.data.label }}'
+    command_class_name: '{{ trigger.event.data.command_class_name }}'
+    value: '{{ trigger.event.data.value }}'
+- service: logbook.log
+  data:
+    name: 'Z-Wave JS'
+    message: 'received event: {{ command_class_name }} - {{ value }} - {{ label }}'
+- choose:
+  - conditions: '{{ property_key_name == ''001'' and value == ''KeyPressed'' }}'
+    sequence: !input 'tap_1x_up'
+  - conditions: '{{ property_key_name == ''002'' and value == ''KeyPressed'' }}'
+    sequence: !input 'tap_1x_dn'
+  - conditions: '{{ property_key_name == ''001'' and value == ''KeyPressed2x'' }}'
+    sequence: !input 'tap_2x_up'
+  - conditions: '{{ property_key_name == ''002'' and value == ''KeyPressed2x'' }}'
+    sequence: !input 'tap_2x_dn'
+  - conditions: '{{ property_key_name == ''001'' and value == ''KeyPressed3x'' }}'
+    sequence: !input 'tap_3x_up'
+  - conditions: '{{ property_key_name == ''002'' and value == ''KeyPressed3x'' }}'
+    sequence: !input 'tap_3x_dn'
+  - conditions: '{{ property_key_name == ''001'' and value == ''KeyHeldDown'' }}'
+    sequence: !input 'up_btn_hld'
+  - conditions: '{{ property_key_name == ''001'' and value == ''KeyReleased'' }}'
+    sequence: !input 'up_btn_rel'
+  - conditions: '{{ property_key_name == ''002'' and value == ''KeyHeldDown'' }}'
+    sequence: !input 'dn_btn_hld'
+  - conditions: '{{ property_key_name == ''002'' and value == ''KeyReleased'' }}'
+    sequence: !input 'dn_btn_rel'
